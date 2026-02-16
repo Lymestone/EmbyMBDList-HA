@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Settings - MDBList Sync{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+<form method="POST" class="card">
+    <h2>API Configuration</h2>
+    <label for="emby_server_url">Emby Server URL</label>
+    <input type="url" name="emby_server_url" id="emby_server_url" value="{{ admin.get('emby_server_url', '') }}" required>
+
+    <label for="emby_user_id">Emby User ID</label>
+    <input type="text" name="emby_user_id" id="emby_user_id" value="{{ admin.get('emby_user_id', '') }}" required>
+
+    <label for="emby_api_key">Emby API Key</label>
+    <input type="password" name="emby_api_key" id="emby_api_key" value="{{ admin.get('emby_api_key', '') }}" required>
+
+    <label for="mdblist_api_key">MDBList API Key</label>
+    <input type="password" name="mdblist_api_key" id="mdblist_api_key" value="{{ admin.get('mdblist_api_key', '') }}" required>
+
+    <h2 style="margin-top: 1.5rem;">Sync Settings</h2>
+    <label for="hours_between_refresh">Hours Between Refresh (0 = run once)</label>
+    <input type="number" name="hours_between_refresh" id="hours_between_refresh" value="{{ admin.get('hours_between_refresh', '6') }}" min="0">
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="download_manually_added_lists" id="download_manually_added_lists"
+            {% if admin.get('download_manually_added_lists', 'true').lower() == 'true' %}checked{% endif %}>
+        <label for="download_manually_added_lists">Download manually added lists</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="download_my_mdblist_lists_automatically" id="download_my_mdblist_lists_automatically"
+            {% if admin.get('download_my_mdblist_lists_automatically', 'true').lower() == 'true' %}checked{% endif %}>
+        <label for="download_my_mdblist_lists_automatically">Download my MDBList lists automatically</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="use_mdblist_collection_description" id="use_mdblist_collection_description"
+            {% if admin.get('use_mdblist_collection_description', 'false').lower() == 'true' %}checked{% endif %}>
+        <label for="use_mdblist_collection_description">Use MDBList collection description</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="update_collection_sort_name" id="update_collection_sort_name"
+            {% if admin.get('update_collection_sort_name', 'true').lower() == 'true' %}checked{% endif %}>
+        <label for="update_collection_sort_name">Update collection sort name (updated collections appear first)</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="update_items_sort_names_default_value" id="update_items_sort_names_default_value"
+            {% if admin.get('update_items_sort_names_default_value', 'false').lower() == 'true' %}checked{% endif %}>
+        <label for="update_items_sort_names_default_value">Sort items by date added (default for all collections)</label>
+    </div>
+
+    <h2 style="margin-top: 1.5rem;">Metadata Refresh</h2>
+    <div class="checkbox-row">
+        <input type="checkbox" name="refresh_items_in_collections" id="refresh_items_in_collections"
+            {% if admin.get('refresh_items_in_collections', 'false').lower() == 'true' %}checked{% endif %}>
+        <label for="refresh_items_in_collections">Refresh items in collections</label>
+    </div>
+
+    <label for="refresh_items_in_collections_max_days_since_added">Max days since added</label>
+    <input type="number" name="refresh_items_in_collections_max_days_since_added" id="refresh_items_in_collections_max_days_since_added"
+        value="{{ admin.get('refresh_items_in_collections_max_days_since_added', '10') }}" min="1">
+
+    <label for="refresh_items_in_collections_max_days_since_premiered">Max days since premiered</label>
+    <input type="number" name="refresh_items_in_collections_max_days_since_premiered" id="refresh_items_in_collections_max_days_since_premiered"
+        value="{{ admin.get('refresh_items_in_collections_max_days_since_premiered', '30') }}" min="1">
+
+    <div style="margin-top: 1rem;">
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+    </div>
+</form>
+{% endblock %}

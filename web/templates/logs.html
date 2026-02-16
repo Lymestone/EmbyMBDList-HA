@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Logs - MDBList Sync{% endblock %}
+{% block content %}
+<h1>Logs</h1>
+<div class="card" style="padding: 0;">
+    <pre id="log-output" style="
+        padding: 1rem;
+        margin: 0;
+        max-height: 70vh;
+        overflow-y: auto;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        color: #c0c0c0;
+        white-space: pre-wrap;
+        word-break: break-word;
+    ">Loading logs...</pre>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const logEl = document.getElementById('log-output');
+let autoScroll = true;
+
+logEl.addEventListener('scroll', () => {
+    autoScroll = (logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 20);
+});
+
+function fetchLogs() {
+    fetch('{{ ingress_path }}/api/logs')
+        .then(r => r.json())
+        .then(d => {
+            logEl.textContent = d.logs.join('\n') || 'No logs yet.';
+            if (autoScroll) logEl.scrollTop = logEl.scrollHeight;
+        })
+        .catch(() => {});
+}
+
+fetchLogs();
+setInterval(fetchLogs, 2000);
+</script>
+{% endblock %}

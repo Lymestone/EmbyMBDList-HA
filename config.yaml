@@ -1,0 +1,28 @@
+name: "Emby MDBList Collection Creator"
+description: "Sync MDBList.com lists to Emby collections with a Web UI"
+version: "2.0.0"
+slug: "emby_mdblist_collection_creator"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+  - armhf
+  - i386
+init: false
+homeassistant_api: false
+ingress: true
+ingress_port: 5000
+panel_icon: "mdi:movie-roll"
+panel_title: "MDBList Collections"
+map:
+  - type: data
+    read_only: false
+ports:
+  5000/tcp: null
+ports_description:
+  5000/tcp: "Web UI"
+options: {}
+schema: {}
+environment:
+  CONFIG_PATH: /data/config.cfg
+  INGRESS_PATH: "{{INGRESS_PATH}}"

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Collections - MDBList Sync{% endblock %}
+{% block content %}
+<h1>Collections</h1>
+
+<div style="margin-bottom: 1rem;">
+    <a href="{{ ingress_path }}/collections/add" class="btn btn-primary">Add Collection</a>
+</div>
+
+{% if collections %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Source</th>
+                <th>Frequency</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in collections %}
+            <tr>
+                <td>{{ c.name }}</td>
+                <td class="text-truncate meta">{{ c.get('source', c.get('id', '-')) }}</td>
+                <td>{{ c.get('frequency', '100') }}%</td>
+                <td class="actions">
+                    <a href="{{ ingress_path }}/collections/{{ c.name }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+                    <form method="POST" action="{{ ingress_path }}/collections/{{ c.name }}/delete" style="display:inline;"
+                          onsubmit="return confirm('Remove collection {{ c.name }}?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p class="meta">No collections configured yet.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - MDBList Sync{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="card">
+    <h2>Sync Status</h2>
+    <div class="stat-grid">
+        <div class="stat">
+            <div class="value" id="sync-status">{{ status.status | capitalize }}</div>
+            <div class="label">Status</div>
+        </div>
+        <div class="stat">
+            <div class="value" id="last-sync">{{ status.last_sync_time | format_time }}</div>
+            <div class="label">Last Sync</div>
+        </div>
+        <div class="stat">
+            <div class="value" id="next-sync">{{ status.next_sync_time | time_until }}</div>
+            <div class="label">Next Sync</div>
+        </div>
+    </div>
+    <p class="meta" style="margin-top: 0.75rem;" id="summary">{{ status.last_summary or 'No sync has run yet.' }}</p>
+    <div style="margin-top: 1rem;">
+        <button class="btn btn-primary" id="sync-btn" onclick="triggerSync()">Sync Now</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Configured Collections ({{ collections | length }})</h2>
+    {% if collections %}
+    <table>
+        <thead><tr><th>Name</th><th>Source</th><th>Frequency</th></tr></thead>
+        <tbody>
+        {% for c in collections %}
+        <tr>
+            <td>{{ c.name }}</td>
+            <td class="text-truncate meta">{{ c.get('source', c.get('id', 'auto')) }}</td>
+            <td>{{ c.get('frequency', '100') }}%</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="meta">No collections configured. <a href="{{ ingress_path }}/collections/add">Add one</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function triggerSync() {
+    const btn = document.getElementById('sync-btn');
+    btn.disabled = true;
+    btn.textContent = 'Starting...';
+    fetch('{{ ingress_path }}/api/sync', {method: 'POST'})
+        .then(r => r.json())
+        .then(d => {
+            btn.textContent = d.ok ? 'Sync Started' : d.message;
+            setTimeout(() => { btn.disabled = false; btn.textContent = 'Sync Now'; }, 3000);
+        })
+        .catch(() => { btn.disabled = false; btn.textContent = 'Sync Now'; });
+}
+
+function refreshDashboard() {
+    fetch('{{ ingress_path }}/api/status')
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('sync-status').textContent = d.status.charAt(0).toUpperCase() + d.status.slice(1);
+            document.getElementById('summary').textContent = d.last_summary || 'No sync has run yet.';
+        });
+}
+setInterval(refreshDashboard, 5000);
+</script>
+{% endblock %}

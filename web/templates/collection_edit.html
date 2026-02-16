@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add' if is_new else 'Edit' }} Collection - MDBList Sync{% endblock %}
+{% block content %}
+<h1>{{ 'Add' if is_new else 'Edit' }} Collection</h1>
+
+<form method="POST" class="card">
+    <label for="name">Collection Name</label>
+    <input type="text" name="name" id="name" value="{{ collection.name if collection else '' }}" required>
+
+    <label for="source">Source URL(s) <span class="meta">(comma-separated for multiple)</span></label>
+    <input type="text" name="source" id="source" value="{{ collection.get('source', '') if collection else '' }}" placeholder="https://mdblist.com/lists/user/list-name">
+
+    <label for="frequency">Frequency (0-100%)</label>
+    <input type="number" name="frequency" id="frequency" value="{{ collection.get('frequency', '100') if collection else '100' }}" min="0" max="100">
+
+    <label for="poster">Poster URL or Path <span class="meta">(optional)</span></label>
+    <input type="text" name="poster" id="poster" value="{{ collection.get('poster', '') if collection else '' }}">
+
+    <label for="description">Description Override <span class="meta">(optional, overrides MDBList description)</span></label>
+    <input type="text" name="description" id="description" value="{{ collection.get('description', '') if collection else '' }}">
+
+    <label for="active_between">Active Between <span class="meta">(optional, e.g. 09-30, 11-01)</span></label>
+    <input type="text" name="active_between" id="active_between" value="{{ collection.get('active_between', '') if collection else '' }}" placeholder="MM-DD, MM-DD">
+
+    <label for="collection_sort_name">Custom Sort Name <span class="meta">(optional)</span></label>
+    <input type="text" name="collection_sort_name" id="collection_sort_name" value="{{ collection.get('collection_sort_name', '') if collection else '' }}">
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="update_items_sort_names" id="update_items_sort_names"
+            {% if collection and collection.get('update_items_sort_names', 'false').lower() == 'true' %}checked{% endif %}>
+        <label for="update_items_sort_names">Sort items by date added to Emby</label>
+    </div>
+
+    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary">{{ 'Add' if is_new else 'Save' }}</button>
+        <a href="{{ ingress_path }}/collections" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

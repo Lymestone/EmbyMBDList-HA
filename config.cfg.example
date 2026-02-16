@@ -1,0 +1,20 @@
+[admin]
+emby_server_url = http://your-emby-server:8096
+emby_user_id = your_emby_user_id
+emby_api_key = your_emby_api_key
+mdblist_api_key = your_mdblist_api_key
+
+download_manually_added_lists = True
+download_my_mdblist_lists_automatically = True
+use_mdblist_collection_description = True
+update_collection_sort_name = True
+hours_between_refresh = 6
+update_items_sort_names_default_value = False
+refresh_items_in_collections = True
+refresh_items_in_collections_max_days_since_added = 10
+refresh_items_in_collections_max_days_since_premiered = 30
+
+[Example Collection]
+source = https://mdblist.com/lists/username/list-name
+frequency = 100
+update_items_sort_names = False

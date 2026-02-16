@@ -1,0 +1,8 @@
+config_hidden*
+config.cfg
+__pycache__/
+backup/
+notes.txt
+.vscode/launch.json
+test.py
+temp/
