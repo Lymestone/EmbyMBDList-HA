@@ -1,6 +1,6 @@
 name: "Emby MDBList Collection Creator"
 description: "Sync MDBList.com lists to Emby collections with a Web UI"
-version: "2.0.3"
+version: "2.0.4"
 slug: "emby_mdblist_collection_creator"
 arch:
   - aarch64

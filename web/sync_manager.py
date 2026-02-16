@@ -5,7 +5,7 @@ import sys
 import io
 
 
-class LogTee(io.TextIOBase):
+class LogTee:
     """Tee stdout to both original stdout and a deque buffer."""
 
     def __init__(self, original, buffer, lock):
@@ -28,6 +28,9 @@ class LogTee(io.TextIOBase):
 
     def isatty(self):
         return self.original.isatty()
+
+    def __getattr__(self, name):
+        return getattr(self.original, name)
 
 
 class SyncManager:
