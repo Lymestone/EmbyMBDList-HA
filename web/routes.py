@@ -12,6 +12,13 @@ def _cm():
     return current_app.config["config_manager"]
 
 
+def _ingress_redirect(endpoint, **kwargs):
+    """Redirect with ingress path prefix."""
+    ingress_path = request.headers.get("X-Ingress-Path", "").rstrip("/")
+    path = url_for(endpoint, **kwargs)
+    return redirect(ingress_path + path)
+
+
 @bp.route("/")
 def dashboard():
     status = _sm().get_status_dict()
@@ -44,7 +51,7 @@ def settings():
 
         cm.update_admin_settings(settings_dict)
         flash("Settings saved successfully.", "success")
-        return redirect(url_for("main.settings"))
+        return _ingress_redirect("main.settings")
 
     admin = cm.get_admin_settings()
     return render_template("settings.html", admin=admin)
@@ -62,7 +69,7 @@ def collection_add():
         name = request.form.get("name", "").strip()
         if not name:
             flash("Collection name is required.", "error")
-            return redirect(url_for("main.collection_add"))
+            return _ingress_redirect("main.collection_add")
 
         settings = {
             "source": request.form.get("source", ""),
@@ -82,7 +89,7 @@ def collection_add():
             flash(f"Collection '{name}' added.", "success")
         else:
             flash(f"Collection '{name}' already exists.", "error")
-        return redirect(url_for("main.collections_list"))
+        return _ingress_redirect("main.collections_list")
 
     return render_template("collection_edit.html", collection=None, is_new=True)
 
@@ -108,12 +115,12 @@ def collection_edit(name):
 
         cm.update_collection(name, new_name, settings)
         flash(f"Collection '{new_name}' updated.", "success")
-        return redirect(url_for("main.collections_list"))
+        return _ingress_redirect("main.collections_list")
 
     collection = cm.get_collection(name)
     if collection is None:
         flash(f"Collection '{name}' not found.", "error")
-        return redirect(url_for("main.collections_list"))
+        return _ingress_redirect("main.collections_list")
     return render_template("collection_edit.html", collection=collection, is_new=False)
 
 
@@ -123,7 +130,7 @@ def collection_delete(name):
         flash(f"Collection '{name}' removed.", "success")
     else:
         flash(f"Collection '{name}' not found.", "error")
-    return redirect(url_for("main.collections_list"))
+    return _ingress_redirect("main.collections_list")
 
 
 @bp.route("/logs")

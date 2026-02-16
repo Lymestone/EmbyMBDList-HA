@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request
 
 
 def create_app(sync_manager, config_manager):
@@ -8,11 +8,10 @@ def create_app(sync_manager, config_manager):
     app.config["sync_manager"] = sync_manager
     app.config["config_manager"] = config_manager
 
-    ingress_path = os.environ.get("INGRESS_PATH", "").rstrip("/")
-    app.config["INGRESS_PATH"] = ingress_path
-
     @app.context_processor
     def inject_ingress_path():
+        # HA sends the ingress path via X-Ingress-Path header on each request
+        ingress_path = request.headers.get("X-Ingress-Path", "").rstrip("/")
         return {"ingress_path": ingress_path}
 
     from web.routes import bp
