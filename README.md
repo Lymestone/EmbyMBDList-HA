@@ -1,260 +1,128 @@
 ![](images/banner.jpeg)
 
-# Emby MDBList Collection Creator 1.84
+# Emby MDBList Collection Creator — Home Assistant Add-on
 
-This tool allows you to convert lists from MDBList.com into collections within your Emby media server. MDBList aggregates content lists from various platforms including Trakt and IMDB.
+A Home Assistant add-on that syncs [MDBList.com](https://mdblist.com/) lists to [Emby](https://emby.media/) collections, with a built-in Web UI for configuration and monitoring.
 
-## Plugin version now available!
+> **Based on [Emby-MDBList-Collection-Creator](https://github.com/jonjonsson/Emby-MDBList-Collection-Creator) by [jonjonsson](https://github.com/jonjonsson).**
+> The core sync engine (MDBList API, Emby API, item sorting, metadata refresh, seasonal collections) is entirely his work.
+> This fork adds a Web UI, Home Assistant add-on packaging, and Docker/ingress support.
+> Please consider [supporting the original author on Patreon](https://www.patreon.com/c/acdbtv).
 
-If you prefer to make life easier you can use the [Plugin Version on ACdb.tv Automated Collections](https://acdb.tv/). Read more at the bottom of readme. If not, continue reading!
+---
 
-## Features
+## What This Fork Adds
 
-* List Conversion: Transform MDBList lists into Emby collections
-* Metadata Refresh: Keep ratings up-to-date for newly released content
-* Collection Images: Upload local or remote images for collections posters
-* Seasonal Collections: Specify when a collection should be visible
-* Collection Ordering: Show your collections in order of which one was updated last
-* Collection Description: Add description from MDBList or create your own
-* Backup & Restore: Additional utilities to backup and restore watch history and favorites
+| Feature | Details |
+|---|---|
+| **Web UI** | Flask-based dashboard with pages for Settings, Collections, and Logs — no more editing `config.cfg` by hand |
+| **Home Assistant Add-on** | One-click install via HACS, with ingress support (runs inside the HA sidebar) |
+| **Docker image** | Standalone Docker image published to `ghcr.io/lymestone/embymdblist-ha` |
+| **Live sync controls** | Dashboard shows sync status, last/next sync time, and a "Sync Now" button |
+| **Background sync** | Daemon thread runs sync cycles automatically; config changes via the Web UI are picked up each cycle |
 
-## Support me
+Everything else — the sync logic, MDBList integration, Emby API calls, seasonal collections, sort-name tricks, metadata refresh — comes from the original project.
 
-* Please consider [subscribing to my Patreon](https://www.patreon.com/c/acdbtv) even though you use this script and not ACdb.
+---
 
-## Prerequisites:
+## Installation
 
-To use this script, you need:
+### Home Assistant (HACS)
 
-* At minimum Python 3.11 installed on your system
-* "Requests" Python package (install with `pip install requests`)
-* Admin privileges on Emby
-* A user account on [MDBList](https://mdblist.com/)
-* The script has been tested with Emby Version 4.8.8.0, but other recent versions should also be compatible
+1. In Home Assistant, go to **HACS > 3-dot menu > Custom repositories**
+2. Add this repository URL: `https://github.com/Lymestone/EmbyMBDList-HA`
+3. Category: **Add-on**
+4. Install **Emby MDBList Collection Creator** from the add-on store
+5. Start the add-on and open the Web UI from the sidebar or add-on page
 
-## Usage
-
-### Configuring the Admin Section
-
-In the `config.cfg` file, fill in the following details:
-
-* Emby server URL
-* Emby admin user ID
-* Emby API key
-* MDBList API key
-
-Refer to the comments in `config.cfg` for additional information.
-
-If config_hidden.cfg exists it will be used instead. Just copy paste the contents of config.cfg into config_hidden.cfg and make your changes there. When updating the script, you can safely overwrite config.cfg without losing your settings.
-
-### Running the Script
-
-To run the script, follow these steps:
-
-1. **Open a Command Prompt or Terminal:**
-  - On Windows, press `Win + R`, type `cmd`, and press Enter.
-  - On macOS or Linux, open the Terminal application.
-
-2. **Navigate to the Project Directory:**
-  - Use the `cd` command to change to the directory where the script is located. For example:
-    ```bash
-    cd /path/to/Emby-MDBList-Collection-Creator
-    ```
-
-3. **Install Required Packages:**
-  - Ensure you have Python installed. You can download it from [python.org](https://www.python.org/).
-  - Install the required Python package by running:
-    ```bash
-    pip install requests
-    ```
-
-4. **Run the Script:**
-  - Execute the script by running:
-    ```bash
-    python app.py
-    ```
-
-If you encounter any issues, ensure you have followed each step correctly and have the necessary permissions.
-
-
-### Running the Script in Docker
-
-To run the script in a Docker container, you will need to mount a configuration file to `/app/config.cfg` but that's it - no ports need exposing.
-
-An example docker run command:
+### Docker (standalone)
 
 ```bash
-docker run -v /path/to/config.cfg:/app/config.cfg ghcr.io/jonjonsson/emby-mdblist-collection-creator
+docker run -d \
+  -v /path/to/config.cfg:/data/config.cfg \
+  -p 5000:5000 \
+  ghcr.io/lymestone/embymdblist-ha:latest
 ```
 
-Or use this example compose file:
+Or with Docker Compose:
 
 ```yml
-version: '3.8'
-
 services:
-    emby-mdblist-collection-creator:
-        image: ghcr.io/jonjonsson/emby-mdblist-collection-creator:latest
-        volumes:
-            - /path/to/config.cfg:/app/config.cfg
+  emby-mdblist:
+    image: ghcr.io/lymestone/embymdblist-ha:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./config.cfg:/data/config.cfg
 ```
 
+Then open `http://localhost:5000` in your browser.
 
-### Building the docker image manually
-
-It's not necessary to build the image yourself, but should you choose to, you need these two commands:
-
-1. Build the Docker image:
+### Manual (Python)
 
 ```bash
-docker build -t emby-mdblist . --load
+pip install -r requirements.txt
+python run.py
 ```
 
-2. Run the Docker container, passing in the config file via a volume mount:
+This starts the Web UI on port 5000 and the sync loop in the background.
+
+To run just the sync script without the Web UI (original behavior):
 
 ```bash
-docker run -v .\config_hidden.cfg:/app/config.cfg emby-mdblist
+python app.py
 ```
 
-(Use `./config_hidden.cfg` if you are on a Unix-based system)
+---
 
-## Creating Emby Collections from MDBList Lists
+## Web UI
 
-There are two methods to create Emby collections from MDBList lists:
+The Web UI provides four pages:
 
-### 1. Add MDBList URLs to `config.cfg` or `config_hidden.cfg` 
+- **Dashboard** — sync status, last/next sync time, configured collections overview, and a manual "Sync Now" button
+- **Settings** — configure Emby server URL, API keys, MDBList API key, sync interval, and all toggle options
+- **Collections** — add, edit, and remove collections with their MDBList source URLs and per-collection settings
+- **Logs** — live view of sync output
 
-* Refer to `config.cfg` for examples.
-* This method allows you to create collections from other users' lists, found at [MDBList Top Lists](https://mdblist.com/toplists/) for example.
-* The `config.cfg` file contains examples. Use these as a guide to add more lists. 
+*Screenshots coming soon — contributions welcome!*
 
-### 2. Automatically Download Your Lists from MDBList
+---
 
-By creating your own lists on MDBList (found at [My MDBList](https://mdblist.com/mylists/)), Emby collections will be automatically created from your saved lists. This feature can be turned off in `config.cfg`. Please ensure your newly created MDBLists populate items before running the script.
+## Configuration
 
-## Sorting Shows and Movies by time added
+All original `config.cfg` options are supported. The Web UI reads and writes the same config file. See the [original project's documentation](https://github.com/jonjonsson/Emby-MDBList-Collection-Creator) for full details on:
 
-This feature is off by default. Emby can not sort items inside collections by time added to library. That means you can't sort collections to show what is newest first. This is a shame if you have a Trending Movies collection for example and you can't see what's new at a glance. 
+- Collection setup (MDBList URLs, list IDs, user/list names)
+- Sorting items by date added
+- Metadata refresh for newly released content
+- Seasonal/temporary collections
+- Collection posters
+- Backup & restore of watch history
 
-To address this you can have this script update the sort names of items that are in collections. It updates item sort name in the metadata so that the sort name is appended with "!!![number_of_minutes_until_year_2100_from_the_date_time_added_to_emby]". That way the newest items show first when sorted in the default alphabetical order. This will affect the sorting of these items elsewhere as well which you may or may not care about, you can always turn it off later and the old sort name will be restored on the next run of the script.
+---
 
-You can set this on by default for all collection in the config or set it per collection.
+## Original Features (from upstream)
 
-When an item is no longer in a collection that requires it to have a custom sort name the old sort name is restored. 
+All features from [jonjonsson's v1.84](https://github.com/jonjonsson/Emby-MDBList-Collection-Creator) are included:
 
-## Keeping rating up to date for newly released items
-Helps to keep the ratings of newly released movies and shows up to date until the rating settles a bit on IMDB etc. See more in config.cfg.
+- List Conversion: Transform MDBList lists into Emby collections
+- Metadata Refresh: Keep ratings up-to-date for newly released content
+- Collection Images: Upload local or remote images for collection posters
+- Seasonal Collections: Specify when a collection should be visible
+- Collection Ordering: Show collections in order of last update
+- Collection Descriptions: From MDBList or custom
+- Backup & Restore: Utilities for watch history and favorites (`app_backup.py`, `app_restore_backup.py`)
 
-## Seasonal lists
-You can specify a period of the year to show a collection for. For example only show a collection during Christmas every year. You can also specify an end date so a collection does not show again after a specific date, useful for something like this years Oscars collection that you don't want to be hanging about forever. See example in config file.
+---
 
-## Collection posters
-Specify the image to use as a collection poster, either a local image or an image url. See examples in config.cfg.
+## Credits
 
-## Backing up IsWatched and Favorites
-Kind of a bolted on functionality since it's unrelated to the main function of the script, but I needed it so I added it.
+- **Original project**: [Emby-MDBList-Collection-Creator](https://github.com/jonjonsson/Emby-MDBList-Collection-Creator) by [jonjonsson](https://github.com/jonjonsson)
+- **Plugin alternative**: [ACdb.tv Automated Collections](https://acdb.tv/) — if you prefer an Emby plugin over a standalone script
+- **This fork**: Web UI, Home Assistant add-on packaging, and Docker support by [Lymestone](https://github.com/Lymestone)
 
-### Backing up
-Run app_backup.py to save IsWatched and Favorites for all users to json files, the files will be saved to a "backup" directory. If you only want to use this functionality it's enough to fill out "emby_server_url", "emby_user_id" and "emby_api_key" in the config file.
+---
 
-### Restoring backup
-Run app_restore_backup.py to restore IsWatched and Favorites to ANOTHER server, see comments at top of app_restore_backup.py.
+## License
 
-## Frequently Asked Questions
-
-- **Is there a plugin version available?**
-  - Yes, see [ACdb.tv Automated Collections](https://acdb.tv/). More information at the end of the readme.
-
-- **What happens if I rename my collection in Emby or this script?**
-  - A new collection will be created with the name you specify in the config file and the renamed collection will be ignored by the script. 
-  
-- **Does this affect my manually created collection?**
-  - This will only affect collections with the same name as specified in the config file.
-  
-- **Do I need a server to use this script?**
-  - No, you can run it on your Windows or Mac PC and just keep it open. The script refreshes the collections every n hours as specified in config.cfg.
-  
-- **Do the collections show for all Emby users?**
-  - Yes, the collections will be visible to all Emby users.
-
-## Changelog
-
-### Version 1.1
-Can use lists by specifying MDBList name and user name of creator instead of having to know the ID. No change required for config.cfg. See example config.cfg on how to use it.
-
-### Version 1.2
-Optionally change the sort name of Emby Collections so that the collections that get modified are ordered first. On by default. Optionally add "update_collection_sort_name = False" to config.cfg to disable.
-
-### Version 1.3
-Optionally set sort names of items so that the newest items show first in the collection.
-
-### Version 1.4
-Optionally refresh metadata for newly added media. Added 2 scripts to backup IsWatched and Favorites for all users. 
-
-### Version 1.5
-New preferred method of adding lists by using the mdblist URL instead of the older method of specifying the ID or list name + author. No config file update is required, old methods will still work. See config.cfg for more info.
-
-### Version 1.6
-Added support for multiple MDBList urls for a single collection.
-
-### Version 1.61 + 1.62
-Fix for item sort names not being updated unless collection existed prior. Additional error handling.
-
-### Version 1.7
-Added ability to have seasonal or temporary lists like for Halloween, Christmas, Oscars etc. Thanks to @cj0r for the idea. See example in config file. No breaking changes for any older version.
-
-### Version 1.71
-Added Docker support thanks to @neoKushan. Minor fix for seasonal lists.
-
-### Version 1.8
-Added ability to set collection posters.
-
-### Version 1.81
-Can set custom sort name for a collection. Use "collection_sort_name" in config.
-
-### Version 1.82
-Optionally set "use_mdblist_collection_description = True" to grab the descriptions from MDBList. Applies to all collections.
-Optionally set "description" for each collection to set your own custom description. Will overwrite MDBList description if set.
-See examples in config.cfg. 
-
-### Version 1.83
-* Now using newer version of MDBList API. 
-* Added some new MDBLIst methods which may be helpful in the future. 
-* Renamed some variables to avoid naming conflicts. 
-* Updated Readme to include information about ACdb.tv.
-
-### Version 1.84
-Important update if you have lists with more than 1000 items. Addressing changes to MDBList API that now limits items requests to 1000 at a time.
-
-
-# 🚀 Try the ACdb.tv Automated Collections Plugin for Emby!
-
-## Looking for an easier way to sync MDBList collections with Emby?
-Check out the [ACdb.tv Automated Collections plugin](https://acdb.tv/) — no Python or manual setup required! Install directly from the Emby plugin catalog and manage everything from ACdb.tv.
-
-![ACdb.tv collection repository](images/ACdb_Official_Collections.png)
-
-## Key Features:
-- Easily install the plugin from Emby Plugin Catalog
-- Easy webapp-based configuration at [acdb.tv](https://acdb.tv/) instead of fiddling with config files.
-- Dynamic movie & TV collections synced automatically
-- Scheduled/seasonal collections (show only during specific periods)
-- Custom collection ordering (move updated collections to the top)
-- Ability to see which items you have and do not have in a collection (Patreon feature)
-- Coming soon: Collection posters with a poster gallery
-
-## How to Get Started:
-![ACdb.tv Plugin install](images/ACdb_plugin_install.png)
-- Install from the Emby plugin catalog (see [Getting Started](https://acdb.tv/))
-- Free: 3 collections
-- $2/month: Up to 20 collections, any MDBList, full customization
-
-### Seasonal Collection in ACdb.tv
-![ACdb.tv seasonal collections](images/ACdb_seasonal_collections.png)
-
-### View which items you have to do not have from a collection
-![ACdb.tv see which items you have, and](images/ACdb_missing_items.png)
-
-### Modify collection sort order, schedule and more
-![ACdb.tv example of collection settings](images/ACdb_collection_settings.png)
-
+The original project does not include a license file. This fork adds a Web UI and Home Assistant integration on top of that work. Please refer to the [original repository](https://github.com/jonjonsson/Emby-MDBList-Collection-Creator) for licensing questions.
